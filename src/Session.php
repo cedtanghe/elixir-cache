@@ -3,8 +3,8 @@
 namespace Elixir\Cache;
 
 use Elixir\Cache\CacheAbstract;
-use Elixir\HTTP\Session\Session as SessionData;
-use Elixir\HTTP\Session\SessionInterface;
+use Elixir\Session\SessionInterface;
+use Elixir\STDLib\Facade\Session as SessionFacade;
 
 /**
  * @author Cédric Tanghe <ced.tanghe@gmail.com>
@@ -28,7 +28,7 @@ class Session extends CacheAbstract
     public function __construct($identifier = '___CACHE_SESSION___', SessionInterface $session = null) 
     {
         $this->identifier = preg_replace('/[^a-z0-9\-_]+/', '', strtolower($identifier));
-        $this->session = $session ?: SessionData::instance();
+        $this->session = $session ?: SessionFacade::resolveInstance();
     }
     
     /**
