@@ -1,0 +1,31 @@
+{
+    "name": "elixir/elixir-cache",
+    "description": "Component cache",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "elixir",
+        "cache"
+    ],
+    "homepage": "https://github.com/cedtanghe/elixir-cache",
+    "require": {
+        "php": ">=5.4"
+    },
+    "require-dev": {
+        "phpunit/PHPUnit": "~4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Elixir\\Cache\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Elixir\\Test\\Cache\\": "tests/"
+        }
+    },
+    "suggest": {
+        "elixir/elixir-session": "~1.0",
+        "elixir/elixir-db": "~1.0",
+        "elixir/elixir-stdlib": "~1.0"
+    }
+}
