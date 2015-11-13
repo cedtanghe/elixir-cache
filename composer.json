@@ -39,8 +39,8 @@
         }
     },
     "suggest": {
-        "elixir/elixir-session": "~1.0",
-        "elixir/elixir-db": "~1.0",
-        "elixir/elixir-stdlib": "~1.0"
+        "elixir/elixir-session": "*",
+        "elixir/elixir-db": "*",
+        "elixir/elixir-stdlib": "*"
     }
 }
