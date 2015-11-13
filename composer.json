@@ -7,6 +7,20 @@
         "cache"
     ],
     "homepage": "https://github.com/cedtanghe/elixir-cache",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/cedtanghe/elixir-session"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/cedtanghe/elixir-db"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/cedtanghe/elixir-stdlib"
+        }
+    ],
     "require": {
         "php": ">=5.4"
     },
