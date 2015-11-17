@@ -8,7 +8,7 @@ use Elixir\Cache\Encoder\EncoderInterface;
 /**
  * @author Cédric Tanghe <ced.tanghe@gmail.com>
  */
-abstract class CacheAbstract implements CacheInterface
+abstract class CacheAbstract implements CacheInterface, \ArrayAccess
 {
     /**
      * @var EncoderInterface 
@@ -85,5 +85,42 @@ abstract class CacheAbstract implements CacheInterface
         }
         
         return $ttl;
+    }
+    
+    /**
+     * @ignore
+     */
+    public function offsetExists($key)
+    {
+        return $this->exists($key);
+    }
+
+    /**
+     * @ignore
+     */
+    public function offsetSet($key, $value) 
+    {
+        if (null === $key)
+        {
+            throw new \InvalidArgumentException('The key can not be undefined.');
+        }
+
+        $this->store($key, $value, self::DEFAULT_TTL);
+    }
+    
+    /**
+     * @ignore
+     */
+    public function offsetGet($key) 
+    {
+        return $this->get($key);
+    }
+
+    /**
+     * @ignore
+     */
+    public function offsetUnset($key)
+    {
+        $this->delete($key);
     }
 }
