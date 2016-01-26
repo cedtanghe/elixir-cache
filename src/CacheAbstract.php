@@ -56,7 +56,7 @@ abstract class CacheAbstract implements CacheInterface, \ArrayAccess
     }
     
     /**
-     * @param integer|string|\DateTime $ttl
+     * @param mixed $ttl
      * @return integer
      */
     protected function parseTimeToLive($ttl = self::DEFAULT_TTL)
@@ -68,8 +68,12 @@ abstract class CacheAbstract implements CacheInterface, \ArrayAccess
         
         if ($ttl instanceof \DateTime)
         {
-            $now = new \DateTime(null, $ttl->getTimezone());
-            $ttl = $ttl->getTimestamp() - $now->getTimestamp();
+            $now = time();
+            $ttl = $ttl->format('U') - $now;
+        }
+        else if (version_compare(phpversion(), '5.5', '>=') && $ttl instanceof \DateInterval)
+        {
+            $ttl = $ttl->format('U');
         }
         else if (!is_numeric($ttl))
         {
@@ -80,11 +84,11 @@ abstract class CacheAbstract implements CacheInterface, \ArrayAccess
                 return self::DEFAULT_TTL;
             }
             
-            $now = new \DateTime();
-            $ttl = $time - $now->getTimestamp();
+            $now = time();
+            $ttl = $time - $now;
         }
         
-        return $ttl;
+        return (int)$ttl;
     }
     
     /**
