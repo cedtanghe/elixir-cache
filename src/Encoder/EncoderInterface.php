@@ -8,13 +8,15 @@ namespace Elixir\Cache\Encoder;
 interface EncoderInterface
 {
     /**
-     * @param mixed $value 
+     * @param mixed $value
+     *
      * @return mixed
      */
     public function encode($value);
-    
+
     /**
-     * @param mixed $value 
+     * @param mixed $value
+     *
      * @return mixed
      */
     public function decode($value);

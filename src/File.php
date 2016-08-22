@@ -2,8 +2,6 @@
 
 namespace Elixir\Cache;
 
-use Elixir\Cache\CacheAbstract;
-
 /**
  * @author Cédric Tanghe <ced.tanghe@gmail.com>
  */
@@ -13,34 +11,32 @@ class File extends CacheAbstract
      * @var string
      */
     const DEFAULT_ENCODER = '\Elixir\Cache\Encoder\Serialize';
-    
+
     /**
-     * @var string 
+     * @var string
      */
     protected $path;
-    
+
     /**
      * @param string $path
      */
-    public function __construct($path = null) 
+    public function __construct($path = null)
     {
-        $path = $path ?: 'application' . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR;
-        
-        if (!is_dir($path))
-        {
+        $path = $path ?: 'application'.DIRECTORY_SEPARATOR.'storage'.DIRECTORY_SEPARATOR.'cache'.DIRECTORY_SEPARATOR;
+
+        if (!is_dir($path)) {
             mkdir($path, 0777, true);
         }
-        
+
         $this->path = rtrim($path, DIRECTORY_SEPARATOR);
     }
-    
+
     /**
      * {@inheritdoc}
      */
-    public function getEncoder() 
+    public function getEncoder()
     {
-        if (null === $this->encoder) 
-        {
+        if (null === $this->encoder) {
             $class = self::DEFAULT_ENCODER;
             $this->setEncoder(new $class());
         }
@@ -50,11 +46,12 @@ class File extends CacheAbstract
 
     /**
      * @param string $key
+     *
      * @return string
      */
     protected function getFile($key)
     {
-        return $this->path . DIRECTORY_SEPARATOR . md5($key) . '.cache';
+        return $this->path.DIRECTORY_SEPARATOR.md5($key).'.cache';
     }
 
     /**
@@ -63,25 +60,23 @@ class File extends CacheAbstract
     public function exists($key)
     {
         $file = $this->getFile($key);
-        
-        if (file_exists($file))
-        {
+
+        if (file_exists($file)) {
             $handle = fopen($file, 'r');
-            $expired = time() > (int)trim(fgets($handle));
-            
+            $expired = time() > (int) trim(fgets($handle));
+
             fclose($handle);
-            
-            if ($expired)
-            {
+
+            if ($expired) {
                 unlink($file);
             }
-            
+
             return !$expired;
         }
-        
+
         return false;
     }
-    
+
     /**
      * {@inheritdoc}
      */
@@ -89,13 +84,11 @@ class File extends CacheAbstract
     {
         $file = $this->getFile($key);
 
-        if (file_exists($file))
-        {
+        if (file_exists($file)) {
             $handle = fopen($file, 'r');
-            $ttl = (int)trim(fgets($handle));
+            $ttl = (int) trim(fgets($handle));
 
-            if (time() > $ttl) 
-            {
+            if (time() > $ttl) {
                 fclose($handle);
                 unlink($file);
 
@@ -104,18 +97,18 @@ class File extends CacheAbstract
 
             $data = '';
 
-            while (!feof($handle)) 
-            {
+            while (!feof($handle)) {
                 $data .= fgets($handle);
             }
-            
+
             fclose($handle);
+
             return $this->getEncoder()->decode($data);
         }
 
         return is_callable($default) ? call_user_func($default) : $default;
     }
-    
+
     /**
      * {@inheritdoc}
      */
@@ -124,14 +117,14 @@ class File extends CacheAbstract
         $ttl = time() + $this->parseTimeToLive($ttl);
 
         file_put_contents(
-            $this->getFile($key), 
-            $ttl . "\n" . $this->getEncoder()->encode($value), 
+            $this->getFile($key),
+            $ttl."\n".$this->getEncoder()->encode($value),
             LOCK_EX
         );
-        
+
         return true;
     }
-    
+
     /**
      * {@inheritdoc}
      */
@@ -139,14 +132,13 @@ class File extends CacheAbstract
     {
         $file = $this->getFile($key);
 
-        if (file_exists($file))
-        {
+        if (file_exists($file)) {
             return unlink($file);
         }
-        
+
         return false;
     }
-    
+
     /**
      * {@inheritdoc}
      */
@@ -154,13 +146,11 @@ class File extends CacheAbstract
     {
         $file = $this->getFile($key);
 
-        if (file_exists($file))
-        {
+        if (file_exists($file)) {
             $handle = fopen($file, 'r');
-            $ttl = (int)trim(fgets($handle));
+            $ttl = (int) trim(fgets($handle));
 
-            if (time() > $ttl) 
-            {
+            if (time() > $ttl) {
                 fclose($handle);
                 unlink($file);
 
@@ -169,26 +159,25 @@ class File extends CacheAbstract
 
             $data = '';
 
-            while (!feof($handle)) 
-            {
+            while (!feof($handle)) {
                 $data .= fgets($handle);
             }
-            
+
             fclose($handle);
-            $data = (int)$this->getEncoder()->decode($data) + $step;
-            
+            $data = (int) $this->getEncoder()->decode($data) + $step;
+
             file_put_contents(
-                $this->getFile($key), 
-                $ttl . "\n" . $this->getEncoder()->encode($data), 
+                $this->getFile($key),
+                $ttl."\n".$this->getEncoder()->encode($data),
                 LOCK_EX
             );
-            
+
             return $data;
         }
-        
+
         return 0;
     }
-    
+
     /**
      * {@inheritdoc}
      */
@@ -196,13 +185,11 @@ class File extends CacheAbstract
     {
         $file = $this->getFile($key);
 
-        if (file_exists($file))
-        {
+        if (file_exists($file)) {
             $handle = fopen($file, 'r');
-            $ttl = (int)trim(fgets($handle));
+            $ttl = (int) trim(fgets($handle));
 
-            if (time() > $ttl) 
-            {
+            if (time() > $ttl) {
                 fclose($handle);
                 unlink($file);
 
@@ -211,38 +198,36 @@ class File extends CacheAbstract
 
             $data = '';
 
-            while (!feof($handle)) 
-            {
+            while (!feof($handle)) {
                 $data .= fgets($handle);
             }
-            
+
             fclose($handle);
-            $data = (int)$this->getEncoder()->decode($data) - $step;
-            
+            $data = (int) $this->getEncoder()->decode($data) - $step;
+
             file_put_contents(
-                $this->getFile($key), 
-                $ttl . "\n" . $this->getEncoder()->encode($data), 
+                $this->getFile($key),
+                $ttl."\n".$this->getEncoder()->encode($data),
                 LOCK_EX
             );
-            
+
             return $data;
         }
-        
+
         return 0;
     }
-    
+
     /**
      * {@inheritdoc}
      */
     public function flush()
     {
-        $files = glob($this->path . DIRECTORY_SEPARATOR . '*.cache');
+        $files = glob($this->path.DIRECTORY_SEPARATOR.'*.cache');
 
-        foreach ($files as $file)
-        {
+        foreach ($files as $file) {
             unlink($file);
         }
-        
+
         return true;
     }
 }

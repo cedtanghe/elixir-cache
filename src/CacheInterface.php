@@ -8,61 +8,68 @@ namespace Elixir\Cache;
 interface CacheInterface
 {
     /**
-     * @var integer
+     * @var int
      */
     const DEFAULT_TTL = 31556926;
-    
-    /**
-     * @param string $key 
-     * @return boolean
-     */
-    public function exists($key);
-    
+
     /**
      * @param string $key
-     * @param mixed $default 
+     *
+     * @return bool
+     */
+    public function exists($key);
+
+    /**
+     * @param string $key
+     * @param mixed  $default
+     *
      * @return mixed
      */
     public function get($key, $default = null);
-    
+
     /**
-     * @param string $key
-     * @param mixed $value
-     * @param integer|string|\DateTime $ttl
-     * @return boolean
+     * @param string               $key
+     * @param mixed                $value
+     * @param int|string|\DateTime $ttl
+     *
+     * @return bool
      */
     public function store($key, $value, $ttl = self::DEFAULT_TTL);
-    
+
     /**
-     * @param string $key
-     * @param mixed $value
-     * @param integer|string|\DateTime $ttl 
+     * @param string               $key
+     * @param mixed                $value
+     * @param int|string|\DateTime $ttl
+     *
      * @return mixed
      */
     public function remember($key, $value, $ttl = self::DEFAULT_TTL);
 
     /**
-     * @param string $key 
-     * @return boolean
+     * @param string $key
+     *
+     * @return bool
      */
     public function delete($key);
-    
+
     /**
      * @param string $key
-     * @param integer $step
-     * @return integer
+     * @param int    $step
+     *
+     * @return int
      */
     public function incremente($key, $step = 1);
-    
+
     /**
      * @param string $key
-     * @param integer $step
-     * @return integer
+     * @param int    $step
+     *
+     * @return int
      */
     public function decremente($key, $step = 1);
-    
+
     /**
-     * @return boolean
+     * @return bool
      */
     public function flush();
 }

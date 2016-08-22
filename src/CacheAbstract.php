@@ -2,7 +2,6 @@
 
 namespace Elixir\Cache;
 
-use Elixir\Cache\CacheInterface;
 use Elixir\Cache\Encoder\EncoderInterface;
 
 /**
@@ -11,10 +10,10 @@ use Elixir\Cache\Encoder\EncoderInterface;
 abstract class CacheAbstract implements CacheInterface, \ArrayAccess
 {
     /**
-     * @var EncoderInterface 
+     * @var EncoderInterface
      */
     protected $encoder;
-    
+
     /**
      * @param EncoderInterface $value
      */
@@ -22,7 +21,7 @@ abstract class CacheAbstract implements CacheInterface, \ArrayAccess
     {
         $this->encoder = $value;
     }
-    
+
     /**
      * @return EncoderInterface
      */
@@ -38,59 +37,49 @@ abstract class CacheAbstract implements CacheInterface, \ArrayAccess
     {
         $get = $this->get($key, null);
 
-        if (null === $get)
-        {
-            if (is_callable($value))
-            {
+        if (null === $get) {
+            if (is_callable($value)) {
                 $get = call_user_func($value);
-            } 
-            else 
-            {
+            } else {
                 $get = $value;
             }
-            
+
             $this->store($key, $get, $ttl);
         }
 
         return $get;
     }
-    
+
     /**
      * @param mixed $ttl
-     * @return integer
+     *
+     * @return int
      */
     protected function parseTimeToLive($ttl = self::DEFAULT_TTL)
     {
-        if (0 == $ttl)
-        {
+        if (0 == $ttl) {
             return self::DEFAULT_TTL;
         }
-        
-        if ($ttl instanceof \DateTime)
-        {
+
+        if ($ttl instanceof \DateTime) {
             $now = time();
             $ttl = $ttl->format('U') - $now;
-        }
-        else if (version_compare(phpversion(), '5.5', '>=') && $ttl instanceof \DateInterval)
-        {
+        } elseif (version_compare(phpversion(), '5.5', '>=') && $ttl instanceof \DateInterval) {
             $ttl = $ttl->format('U');
-        }
-        else if (!is_numeric($ttl))
-        {
+        } elseif (!is_numeric($ttl)) {
             $time = strtotime($ttl);
-            
-            if (false === $time)
-            {
+
+            if (false === $time) {
                 return self::DEFAULT_TTL;
             }
-            
+
             $now = time();
             $ttl = $time - $now;
         }
-        
-        return (int)$ttl;
+
+        return (int) $ttl;
     }
-    
+
     /**
      * @ignore
      */
@@ -102,20 +91,19 @@ abstract class CacheAbstract implements CacheInterface, \ArrayAccess
     /**
      * @ignore
      */
-    public function offsetSet($key, $value) 
+    public function offsetSet($key, $value)
     {
-        if (null === $key)
-        {
+        if (null === $key) {
             throw new \InvalidArgumentException('The key can not be undefined.');
         }
 
         $this->store($key, $value, self::DEFAULT_TTL);
     }
-    
+
     /**
      * @ignore
      */
-    public function offsetGet($key) 
+    public function offsetGet($key)
     {
         return $this->get($key);
     }

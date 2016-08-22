@@ -2,7 +2,6 @@
 
 namespace Elixir\Cache;
 
-use Elixir\Cache\CacheAbstract;
 use Elixir\DB\DBInterface;
 use Elixir\DB\Query\QueryBuilderFactory;
 use Elixir\DB\Query\QueryBuilderInterface;
@@ -20,15 +19,16 @@ class SQL extends CacheAbstract
     /**
      * @param string $table
      * @param string $driver
+     *
      * @return CreateTable
+     *
      * @throws \RuntimeException
      */
     public static function build($table = 'cache_metas', $driver = QueryBuilderInterface::DRIVER_MYSQL)
     {
         $create = QueryBuilderFactory::createTable($table, $driver);
-        
-        switch ($driver)
-        {
+
+        switch ($driver) {
             case QueryBuilderInterface::DRIVER_MYSQL:
                 static::tableMySQL($create);
                 break;
@@ -40,10 +40,10 @@ class SQL extends CacheAbstract
                     sprintf('Table creation for driver "%s" has not yet been implemented.', $driver)
                 );
         }
-        
+
         return $create;
     }
-    
+
     /**
      * @param MySQLCreateTable $create
      */
@@ -57,7 +57,7 @@ class SQL extends CacheAbstract
                ->option(CreateTable::OPTION_ENGINE, CreateTable::ENGINE_INNODB)
                ->option(CreateTable::OPTION_CHARSET, CreateTable::CHARSET_UTF8);
     }
-    
+
     /**
      * @param SQLiteCreateTable $create
      */
@@ -74,35 +74,35 @@ class SQL extends CacheAbstract
      * @var string
      */
     const DEFAULT_ENCODER = '\Elixir\Cache\Encoder\Serialize';
-    
+
     /**
      * @var DBInterface
      */
     protected $DB;
-    
+
     /**
-     * @var string 
+     * @var string
      */
     protected $table;
-    
+
     /**
      * @param DBInterface $DB
-     * @param string $table
+     * @param string      $table
+     *
      * @throws \InvalidArgumentException
      */
-    public function __construct(DBInterface $DB, $table) 
+    public function __construct(DBInterface $DB, $table)
     {
-        if (!$DB instanceof QueryBuilderInterface)
-        {
+        if (!$DB instanceof QueryBuilderInterface) {
             throw new \InvalidArgumentException(
                 'This class requires the db object implements the interface "\Elixir\DB\Query\QueryBuilderInterface" for convenience.'
             );
         }
-        
+
         $this->DB = $DB;
         $this->table = $table;
     }
-    
+
     /**
      * @return DBInterface
      */
@@ -110,7 +110,7 @@ class SQL extends CacheAbstract
     {
         return $this->DB;
     }
-    
+
     /**
      * @return string
      */
@@ -122,10 +122,9 @@ class SQL extends CacheAbstract
     /**
      * {@inheritdoc}
      */
-    public function getEncoder() 
+    public function getEncoder()
     {
-        if (null === $this->encoder) 
-        {
+        if (null === $this->encoder) {
             $class = self::DEFAULT_ENCODER;
             $this->setEncoder(new $class());
         }
@@ -136,7 +135,7 @@ class SQL extends CacheAbstract
     /**
      * {@inheritdoc}
      */
-    public function exists($key) 
+    public function exists($key)
     {
         return null !== $this->get($key, null);
     }
@@ -144,24 +143,23 @@ class SQL extends CacheAbstract
     /**
      * {@inheritdoc}
      */
-    public function get($key, $default = null) 
+    public function get($key, $default = null)
     {
         $stmt = $this->DB->query(
             $this->DB->createSelect($this->table)->where('key = ?', $key)
         );
-        
+
         $row = $stmt->one();
-        
-        if (false !== $row)
-        {
+
+        if (false !== $row) {
             $expired = time() > $row['ttl'];
 
-            if ($expired) 
-            {
+            if ($expired) {
                 $this->delete($key);
+
                 return is_callable($default) ? call_user_func($default) : $default;
             }
-            
+
             return $this->getEncoder()->decode($data['value']);
         }
 
@@ -175,116 +173,107 @@ class SQL extends CacheAbstract
     {
         $value = $this->getEncoder()->encode($value);
         $ttl = time() + $this->parseTimeToLive($ttl);
-        
-        try
-        {
+
+        try {
             $sql = $this->DB->createInsert($this->table);
             $sql->values([
                 'key' => $key,
                 'value' => $value,
-                'ttl' => $ttl
+                'ttl' => $ttl,
             ]);
-            
-            if (method_exists($this, 'duplicateKeyUpdate'))
-            {
+
+            if (method_exists($this, 'duplicateKeyUpdate')) {
                 $sql->duplicateKeyUpdate([
                     'value' => $value,
-                    'ttl' => $ttl
+                    'ttl' => $ttl,
                 ]);
             }
-            
+
             $this->DB->exec($sql);
-        } 
-        catch (\Exception $exception)
-        {
+        } catch (\Exception $exception) {
             $this->DB->exec(
                 $this->DB->createUpdate($this->table)
                 ->set([
                     'value' => $value,
-                    'ttl' => $ttl
+                    'ttl' => $ttl,
                 ])
                 ->where('key = ?', $key)
             );
         }
-        
+
         return true;
     }
-    
+
     /**
      * {@inheritdoc}
      */
-    public function delete($key) 
+    public function delete($key)
     {
         $this->DB->exec(
             $this->DB->createDelete($this->table)
             ->where('key = ?', $key)
         );
-        
+
         return true;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function incremente($key, $step = 1) 
+    public function incremente($key, $step = 1)
     {
         $value = $this->get($key, null);
-        
-        if (null === $value)
-        {
+
+        if (null === $value) {
             return 0;
         }
-        
-        $value = (int)$value + $step;
-        
+
+        $value = (int) $value + $step;
+
         $this->DB->exec(
             $this->DB->createUpdate($this->table)
             ->set(['value' => $this->getEncoder()->encode($value)])
             ->where('key = ?', $key)
         );
-        
+
         return $value;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function decremente($key, $step = 1) 
+    public function decremente($key, $step = 1)
     {
         $value = $this->get($key, null);
-        
-        if (null === $value)
-        {
+
+        if (null === $value) {
             return 0;
         }
-        
-        $value = (int)$value - $step;
-        
+
+        $value = (int) $value - $step;
+
         $this->DB->exec(
             $this->DB->createUpdate($this->table)
             ->set(['value' => $this->getEncoder()->encode($value)])
             ->where('key = ?', $key)
         );
-        
+
         return $value;
     }
-    
+
     /**
      * {@inheritdoc}
      */
     public function flush()
     {
-        try
-        {
+        try {
             $this->DB->exec($this->DB->createTruncateTable($this->table));
-        } 
-        catch (\Exception $exception)
-        {
+        } catch (\Exception $exception) {
             $this->DB->exec(
                 $this->DB->createDelete($this->table)
             );
         }
-        
+
         return true;
     }
 }
